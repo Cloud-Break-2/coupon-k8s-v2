@@ -1,0 +1,41 @@
+version: '3.7'
+services:
+
+  # Spring Boot 애플리케이션
+  coupon-api:
+    image: cloudbreak6th/coupon-api:multi_v0.1  # 도커 허브에서 이미지 가져오기
+    container_name: coupon-api
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+      - spring.data.redis.host=coupon-redis  # Redis 호스트를 Docker Compose 서비스 이름으로 설정
+      - spring.data.redis.port=6380          # Redis 포트 설정
+    depends_on:
+      - mysql
+      - redis
+
+  redis:
+    container_name: coupon-redis
+    image: redis:7.2-alpine
+    command: redis-server --port 6380
+    labels:
+      - "name=redis"
+      - "mode=standalone"
+    ports:
+      - 6380:6380
+
+  mysql:
+    container_name: coupon-mysql
+    image: ubuntu/mysql:edge
+    command: mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --explicit_defaults_for_timestamp=1
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_DATABASE=coupon
+      - MYSQL_USER=abcd
+      - MYSQL_PASSWORD=1234
+      - MYSQL_ROOT_PASSWORD=1234
+      - TZ=UTC
+    volumes:
+      - ./mysql/init:/docker-entrypoint-initdb.d
